@@ -113,6 +113,16 @@ if [[ "${IMAGE}" == "standard" ]]; then
   LINTER_NAMES_ARRAY['RUST_CLIPPY']="clippy"
 fi
 
+if [[ "${IMAGE}" == "python-lite" ]]; then
+  unset LINTER_NAMES_ARRAY
+  declare -A LINTER_NAMES_ARRAY
+  LINTER_NAMES_ARRAY['CHECKOV']="checkov"
+  LINTER_NAMES_ARRAY['PYTHON_BLACK']="black"
+  LINTER_NAMES_ARRAY['PYTHON_FLAKE8']="flake8"
+  LINTER_NAMES_ARRAY['PYTHON_ISORT']="isort"
+  LINTER_NAMES_ARRAY['YAML']="yamllint"
+fi
+
 echo "Building linter version file: ${VERSION_FILE}"
 
 # Start with an empty file. We might have built this file in a previous build

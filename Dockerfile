@@ -537,6 +537,117 @@ ENV BUILD_DATE=$BUILD_DATE
 ENV BUILD_REVISION=$BUILD_REVISION
 ENV BUILD_VERSION=$BUILD_VERSION
 
+#################################
+# Build the python-lite variant #
+#################################
+FROM python-base AS python-lite
+
+LABEL com.github.actions.name="Super-Linter python-lite" \
+  com.github.actions.description="A lightweight Super-linter variant for selected Python linters." \
+  com.github.actions.icon="code" \
+  com.github.actions.color="red" \
+  org.opencontainers.image.authors="Super Linter Contributors: https://github.com/super-linter/super-linter/graphs/contributors" \
+  org.opencontainers.image.url="https://github.com/super-linter/super-linter" \
+  org.opencontainers.image.source="https://github.com/super-linter/super-linter" \
+  org.opencontainers.image.documentation="https://github.com/super-linter/super-linter" \
+  org.opencontainers.image.description="A lightweight Super-linter variant for selected Python linters."
+
+RUN apk add --no-cache \
+  bash \
+  ca-certificates \
+  coreutils \
+  curl \
+  file \
+  git \
+  git-lfs \
+  jq \
+  npm \
+  nodejs-current \
+  openssh-client \
+  parallel
+
+RUN npm install --global prettier \
+  && npm cache clean --force
+
+SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
+
+########################
+# Install python tools #
+########################
+COPY --from=python-builder /venvs/black /venvs/black
+COPY --from=python-builder /venvs/checkov /venvs/checkov
+COPY --from=python-builder /venvs/flake8 /venvs/flake8
+COPY --from=python-builder /venvs/isort /venvs/isort
+COPY --from=python-builder /venvs/yamllint /venvs/yamllint
+
+###################################
+# Copy linter configuration files #
+###################################
+COPY TEMPLATES /action/lib/.automation
+
+#################################
+# Copy super-linter executables #
+#################################
+COPY lib /action/lib
+
+#########################
+# Configure Environment #
+#########################
+ENV PATH="${PATH}:/venvs/black/bin"
+ENV PATH="${PATH}:/venvs/checkov/bin"
+ENV PATH="${PATH}:/venvs/flake8/bin"
+ENV PATH="${PATH}:/venvs/isort/bin"
+ENV PATH="${PATH}:/venvs/yamllint/bin"
+
+# Restrict this image to selected Python linters
+# ENV VALIDATE_CHECKOV="true"
+# ENV VALIDATE_PYTHON_BLACK="true"
+# ENV VALIDATE_PYTHON_FLAKE8="true"
+# ENV VALIDATE_PYTHON_ISORT="true"
+# ENV VALIDATE_YAML="true"
+
+# File to store linter versions
+ENV VERSION_FILE="/action/linterVersions.txt"
+RUN mkdir -p /action
+
+# Define this for all image variants to avoid that commands that depend on this
+# variable don't find it, and throw "unbound variable" errors when the Bash
+# nounset option is enabled.
+ENV ARM_TTK_PSD1="/usr/lib/microsoft/arm-ttk/arm-ttk.psd1"
+
+# create the homedir, so that in case it is not present (like on action-runner-controller based selfhosted runners)
+# we do not fail at setting /github/workspace as a safe git directory
+ENV HOME="/github/home"
+RUN mkdir -p "${HOME}"
+
+ENTRYPOINT ["/action/lib/linter.sh"]
+
+# Consider directories safe for Git because users might run Super-linter as an
+# arbitrary user.
+# Keep this in a dedicated RUN instruction for clarity
+# hadolint ignore=DL3059
+RUN git config --system --add safe.directory "*"
+
+# Run to build version file and validate image
+ENV IMAGE="python-lite"
+COPY scripts/linterVersions.sh /
+RUN /linterVersions.sh \
+  && rm -rfv /linterVersions.sh
+
+# Set build metadata here so we don't invalidate the container image cache if we
+# change the values of these arguments
+ARG BUILD_DATE
+ARG BUILD_REVISION
+ARG BUILD_VERSION
+
+LABEL org.opencontainers.image.created=$BUILD_DATE \
+  org.opencontainers.image.revision=$BUILD_REVISION \
+  org.opencontainers.image.version=$BUILD_VERSION
+
+ENV BUILD_DATE=$BUILD_DATE
+ENV BUILD_REVISION=$BUILD_REVISION
+ENV BUILD_VERSION=$BUILD_VERSION
+
 ##############################
 # Build the standard variant #
 ##############################
