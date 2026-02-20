@@ -96,6 +96,12 @@ WriteMarkdownCodeBlock() {
 
 FormatSuperLinterSummaryFile() {
   local SUPER_LINTER_SUMMARY_OUTPUT_PATH="${1}"
+
+  if ! command -v prettier >/dev/null 2>&1; then
+    warn "Skipping Super-linter summary formatting because prettier is not installed"
+    return 0
+  fi
+
   local SUPER_LINTER_SUMMARY_FORMAT_COMMAND=(prettier --write)
 
   # Avoid emitting output except of warnings and errors if debug logging is
