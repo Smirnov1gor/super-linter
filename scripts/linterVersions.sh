@@ -121,6 +121,7 @@ if [[ "${IMAGE}" == "python-lite" ]]; then
   LINTER_NAMES_ARRAY['PYTHON_FLAKE8']="flake8"
   LINTER_NAMES_ARRAY['PYTHON_ISORT']="isort"
   LINTER_NAMES_ARRAY['YAML']="yamllint"
+  LINTER_NAMES_ARRAY['BASH']="shellcheck"
 fi
 
 echo "Building linter version file: ${VERSION_FILE}"

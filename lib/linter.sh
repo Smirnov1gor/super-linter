@@ -245,8 +245,10 @@ Header() {
   info " - Image Version: ${BUILD_VERSION}"
   info "---------------------------------------------"
   info "---------------------------------------------"
-  info " Super-Linter source code can be found at:"
+  info " Original Super-Linter source code can be found at:"
   info " - https://github.com/super-linter/super-linter"
+  info " Forked Super-Linter source code can be found at:"
+  info " - https://github.com/Smirnov1gor/super-linter"
   info "---------------------------------------------"
 
   if [[ ${VALIDATE_ALL_CODEBASE} != "false" ]]; then
